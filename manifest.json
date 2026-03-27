@@ -1,0 +1,17 @@
+{
+  "name": "小投资家 - 儿童股票模拟器",
+  "short_name": "小投资家",
+  "description": "培养孩子财商的模拟投资小游戏",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#c6e4b0",
+  "theme_color": "#2e5a2c",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2488/2488654.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>小投资家 - 儿童股票模拟器</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #c6e4b0 0%, #a2d2a8 100%);
+            font-family: 'Segoe UI', 'Comic Neue', 'Poppins', system-ui, sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* 背景金币装饰 */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" opacity="0.08"><path fill="%23F4C542" d="M100,20 L120,40 L100,60 L80,40 Z M150,50 L170,70 L150,90 L130,70 Z M50,50 L70,70 L50,90 L30,70 Z M180,120 L200,140 L180,160 L160,140 Z M20,120 L40,140 L20,160 L0,140 Z M120,150 L140,170 L120,190 L100,170 Z M80,150 L100,170 L80,190 L60,170 Z"/><circle cx="100" cy="100" r="12" fill="%23F4C542"/><circle cx="60" cy="140" r="8" fill="%23F4C542"/><circle cx="140" cy="60" r="8" fill="%23F4C542"/><circle cx="30" cy="70" r="6" fill="%23F4C542"/><circle cx="170" cy="130" r="6" fill="%23F4C542"/></svg>');
+            background-repeat: repeat;
+            background-size: 60px 60px;
+            z-index: 0;
+        }
+
+        /* 共用卡片 */
+        .card {
+            max-width: 1300px;
+            width: 100%;
+            background: #fef9e8;
+            border-radius: 72px;
+            box-shadow: 0 25px 45px rgba(0, 40, 0, 0.2);
+            overflow: hidden;
+            padding: 20px 24px 30px;
+            transition: all 0.2s;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(2px);
+        }
+
+        /* 登录/注册区域 */
+        .auth-container {
+            max-width: 500px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        .auth-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .tab-btn {
+            background: #e2dcc0;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 60px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .tab-btn.active {
+            background: #ffaa33;
+            color: #3b2a0f;
+            box-shadow: 0 3px 0 #c97e1a;
+        }
+        .auth-form {
+            background: white;
+            border-radius: 48px;
+            padding: 30px 25px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        .input-field {
+            width: 100%;
+            padding: 14px 20px;
+            margin: 12px 0;
+            border-radius: 60px;
+            border: 2px solid #eeddbb;
+            font-size: 1rem;
+            font-family: monospace;
+        }
+        .auth-btn {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 60px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 12px;
+            cursor: pointer;
+        }
+        .auth-error {
+            color: #b33;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+
+        /* 游戏主界面 */
+        .game-container {
+            display: none;
+        }
+
+        /* 头部：资产 + 按钮组 */
+        .asset-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            background: #2e5a2c;
+            background-image: linear-gradient(120deg, #2d6a2b, #1e3a1a);
+            border-radius: 60px;
+            padding: 16px 28px;
+            margin-bottom: 20px;
+            color: white;
+        }
+        .asset-left {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .asset-card {
+            background: rgba(255,255,210,0.2);
+            backdrop-filter: blur(6px);
+            border-radius: 50px;
+            padding: 8px 20px;
+            min-width: 110px;
+            text-align: center;
+        }
+        /* 总资产卡片改为淡红色 */
+        .asset-card:last-child {
+            background: rgba(220, 80, 70, 0.35);
+            border: 1px solid rgba(255,200,180,0.6);
+        }
+        .asset-label { font-size: 0.8rem; opacity: 0.9; }
+        .asset-value { font-size: 1.8rem; font-weight: 800; font-family: monospace; }
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .header-btn {
+            background: #ffaa33;
+            border: none;
+            border-radius: 60px;
+            padding: 12px 20px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            color: #3b2a0f;
+            transition: 0.1s;
+            box-shadow: 0 4px 0 #c97e1a;
+        }
+        .header-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #c97e1a; }
+        .withdraw-btn {
+            background: #f5a65b;
+            box-shadow: 0 4px 0 #c97e1a;
+        }
+
+        /* 信息栏 */
+        .info-bar {
+            background: #f7eccc;
+            border-radius: 60px;
+            padding: 12px 24px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            gap: 15px;
+            border: 2px solid #e6c98e;
+            font-weight: bold;
+        }
+        .info-item {
+            background: white;
+            padding: 5px 20px;
+            border-radius: 50px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+        }
+        .date-badge { background: #2e5a2c; color: white; }
+
+        /* 商品卡片区域 */
+        .products-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        .product-card {
+            flex: 1;
+            min-width: 250px;
+            background: white;
+            border-radius: 48px;
+            padding: 18px 16px 22px;
+            box-shadow: 0 12px 18px rgba(0,0,0,0.1);
+            border: 2px solid #e0d6b0;
+        }
+        .product-name { font-size: 1.8rem; font-weight: 800; text-align: center; margin-bottom: 8px; border-radius: 60px; padding: 6px; }
+        .apple-name { background: #ffe8db; color: #c7412b; }
+        .fish-name { background: #e2f0ff; color: #2f6b9f; }
+        .wheat-name { background: #fff0cc; color: #bf9514; }
+        .price-area { text-align: center; margin: 12px 0; }
+        .current-price { font-size: 2.2rem; font-weight: 800; color: #1f6e43; font-family: monospace; }
+        .saturation { text-align: center; background: #f4f0e1; border-radius: 30px; padding: 5px; margin: 10px 0; font-size: 0.85rem; font-weight: bold; }
+        .holdings { text-align: center; background: #e7f0dc; border-radius: 40px; padding: 8px; margin: 12px 0; font-weight: bold; }
+        .trade-controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        /* 买入输入框优化：缩小框体、增大字号 */
+        .trade-input {
+            flex: 1;
+            max-width: 110px;
+            padding: 8px 6px;
+            border-radius: 40px;
+            border: 2px solid #d4c8a8;
+            text-align: center;
+            font-family: monospace;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        .btn-buy {
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 40px;
+            padding: 8px 16px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn-buy:active { transform: scale(0.97); }
+
+        /* 模态框通用 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            background: #fffef5;
+            border-radius: 64px;
+            width: 90%;
+            max-width: 850px;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 20px 24px 30px;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eeddbb;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .modal-header h2 { margin: 0; }
+        .close-modal {
+            background: #ac8e68;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 6px 18px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        
+        /* 资产明细卡片 */
+        .asset-detail-item {
+            background: #faf5e6;
+            border-radius: 40px;
+            padding: 15px;
+            margin-bottom: 16px;
+            border-left: 12px solid #ffbc6e;
+        }
+        .asset-detail-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin: 6px 0;
+        }
+        .profit-positive { color: #2c8c2c; font-weight: bold; }
+        .profit-negative { color: #c75c3e; font-weight: bold; }
+        .sell-control {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        /* 卖出输入框优化：缩小宽度、增大字号 */
+        .sell-input {
+            width: 90px;
+            padding: 6px 8px;
+            border-radius: 60px;
+            border: 2px solid #d4c8a8;
+            text-align: center;
+            font-family: monospace;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        .btn-sell {
+            background: #f57c00;
+            color: white;
+            border: none;
+            border-radius: 60px;
+            padding: 6px 16px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        
+        /* 提现区域 */
+        .withdraw-input-area {
+            background: #fff9ef;
+            border-radius: 48px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        /* 提现输入框优化：缩小宽度、增大字号 */
+        .withdraw-amount-input {
+            width: auto;
+            max-width: 200px;
+            padding: 8px 12px;
+            font-size: 1rem;
+            text-align: center;
+            border-radius: 60px;
+            border: 2px solid #d4c8a8;
+            margin: 10px 0;
+            font-family: monospace;
+            font-weight: 500;
+        }
+        .btn-confirm-withdraw {
+            background: #f5a65b;
+            color: white;
+            border: none;
+            border-radius: 60px;
+            padding: 8px 20px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-left: 12px;
+        }
+        .withdraw-history-list {
+            max-height: 250px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        .withdraw-item {
+            background: #fff3e0;
+            margin: 8px 0;
+            padding: 8px 14px;
+            border-radius: 40px;
+            display: flex;
+            justify-content: space-between;
+            font-family: monospace;
+            border-left: 6px solid #f9b81b;
+        }
+        
+        /* 交易流水分组 */
+        .history-group {
+            margin-bottom: 20px;
+        }
+        .history-date-header {
+            background: #e6dbb5;
+            padding: 6px 15px;
+            border-radius: 40px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .history-item {
+            background: #fff3e0;
+            margin: 8px 0;
+            padding: 8px 14px;
+            border-radius: 40px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            font-family: monospace;
+            border-left: 6px solid #f9b81b;
+        }
+        .error-tip {
+            background: #ffe0e0;
+            border-radius: 60px;
+            padding: 8px 20px;
+            text-align: center;
+            margin: 10px 0 0;
+            color: #b33;
+            font-weight: 500;
+        }
+        .action-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+        .switch-account-btn {
+            background: #ac8e68;
+            color: white;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 60px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        footer {
+            text-align: center;
+            font-size: 0.7rem;
+            margin-top: 20px;
+            color: #6f4f2e;
+        }
+        .game-title {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #3b2a0f;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        @media (max-width: 850px) {
+            .product-card { min-width: 220px; }
+            .asset-value { font-size: 1.3rem; }
+            .sell-input { width: 80px; }
+            .trade-input { max-width: 90px; }
+        }
+    </style>
+</head>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2e5a2c">
+
+<script>
+  // 注册 Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('PWA 注册成功！'))
+        .catch(err => console.log('注册失败：', err));
+    });
+  }
+</script>
+<body>
+<div id="app">
+    <!-- 登录/注册界面 -->
+    <div id="authPanel" class="card auth-container">
+        <div class="game-title">🏦 小投资家</div>
+        <div class="auth-tabs">
+            <button id="loginTab" class="tab-btn active">登录</button>
+            <button id="registerTab" class="tab-btn">注册新账户</button>
+        </div>
+        <div class="auth-form">
+            <input type="text" id="username" class="input-field" placeholder="用户名" autocomplete="off">
+            <input type="password" id="password" class="input-field" placeholder="密码">
+            <button id="authSubmitBtn" class="auth-btn">登录</button>
+            <div id="authMsg" class="auth-error"></div>
+        </div>
+    </div>
+
+    <!-- 游戏主界面 -->
+    <div id="gamePanel" class="card game-container">
+        <div class="game-title">🏦 小投资家</div>
+        <div class="action-bar">
+            <button id="switchAccountBtn" class="switch-account-btn">🔄 切换账户</button>
+        </div>
+        <!-- 资产栏 + 按钮组 -->
+        <div class="asset-header">
+            <div class="asset-left">
+                <div class="asset-card"><div class="asset-label">💰 现金</div><div class="asset-value" id="cashDisplay">0.00</div></div>
+                <div class="asset-card"><div class="asset-label">📦 总资产</div><div class="asset-value" id="totalAssetDisplay">0.00</div></div>
+            </div>
+            <div class="action-buttons">
+                <button id="myAssetBtn" class="header-btn">📋 我的资产</button>
+                <button id="withdrawBtnHeader" class="header-btn withdraw-btn">💸 提现</button>
+            </div>
+        </div>
+
+        <!-- 信息栏: 日期 | 天气 | 特殊事件 -->
+        <div class="info-bar">
+            <div class="info-item date-badge">📅 <span id="dateLabel">3月25日</span></div>
+            <div class="info-item">🌦️ <span id="weatherIcon">☀️</span> <span id="weatherName">晴天</span></div>
+            <div class="info-item">⚠️ <span id="specialEventText">无特殊事件</span></div>
+        </div>
+
+        <!-- 商品卡片 (只有买入) -->
+        <div class="products-row" id="productsContainer"></div>
+
+        <div id="errorMsg" class="error-tip"></div>
+        <footer>🌍 真实时间自动更新价格 (0.5~5元) · 卖出操作请点击「我的资产」</footer>
+    </div>
+
+    <!-- 模态框：我的资产（二级页面） -->
+    <div id="assetModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📊 我的资产</h2>
+                <button class="close-modal" id="closeAssetModalBtn">✖ 关闭</button>
+            </div>
+            <div id="modalHoldingsContainer"></div>
+            <div class="modal-history">
+                <h3>📜 交易流水</h3>
+                <div id="modalHistoryList" class="history-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模态框：提现 -->
+    <div id="withdrawModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>💸 提现</h2>
+                <button class="close-modal" id="closeWithdrawModalBtn">✖ 关闭</button>
+            </div>
+            <div class="withdraw-input-area">
+                <div style="margin-bottom: 10px;">当前现金：<strong id="withdrawCashDisplay">0.00</strong> 元</div>
+                <input type="number" id="withdrawAmount" class="withdraw-amount-input" placeholder="提现金额" step="0.01" min="0.01">
+                <button id="confirmWithdrawBtn" class="btn-confirm-withdraw">✅ 确认提现</button>
+            </div>
+            <div>
+                <h3>📋 提现记录</h3>
+                <div id="withdrawHistoryList" class="withdraw-history-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- 商品定义 ----------
+    const PRODUCTS = [
+        { id: "apple", name: "🍎 苹果", initPrice: 2.50, color: "apple-name" },
+        { id: "fish", name: "🐟 鱼", initPrice: 3.20, color: "fish-name" },
+        { id: "wheat", name: "🌾 小麦", initPrice: 1.80, color: "wheat-name" }
+    ];
+
+    // 天气类型
+    const WEATHER_TYPES = ["晴天", "多云", "雨天", "暴晒"];
+    const dailyWeatherEffect = {
+        "晴天": { apple: 0.02, fish: 0.01, wheat: 0.02 },
+        "多云": { apple: 0.00, fish: 0.00, wheat: 0.00 },
+        "雨天": { apple: -0.02, fish: 0.03, wheat: -0.02 },
+        "暴晒": { apple: 0.03, fish: 0.02, wheat: -0.03 }
+    };
+    const CONSECUTIVE_EFFECT = {
+        rain: { apple: 0.15, fish: -0.15, wheat: 0.15 },
+        sunScorch: { apple: 0.15, fish: 0.15, wheat: -0.15 }
+    };
+
+    // 自然灾害名称（效果统一为价格减半）
+    const DISASTER_NAMES = [
+        "🌧️ 暴雨洪涝", "🔥 高温干旱", "🐛 虫灾", "❄️ 倒春寒", "🌪️ 台风", "⚡ 雷暴天气"
+    ];
+    function getRandomDisasterName() {
+        return DISASTER_NAMES[Math.floor(Math.random() * DISASTER_NAMES.length)];
+    }
+
+    // 辅助函数
+    function formatDate(date) { return `${date.getMonth()+1}月${date.getDate()}日`; }
+    function getConsecutiveDays(weatherArray, targetWeather) {
+        let count = 0;
+        for (let i = weatherArray.length-1; i >= 0; i--) {
+            if (weatherArray[i] === targetWeather) count++;
+            else break;
+        }
+        return count;
+    }
+    function getConsecutiveBonus(weatherHistoryList, todayWeather) {
+        const fullHistory = [...weatherHistoryList, todayWeather];
+        const rainDays = getConsecutiveDays(fullHistory, "雨天");
+        const scorchDays = getConsecutiveDays(fullHistory, "暴晒");
+        if (rainDays >= 2) return { type: "rain", effect: CONSECUTIVE_EFFECT.rain };
+        if (scorchDays >= 2) return { type: "sunScorch", effect: CONSECUTIVE_EFFECT.sunScorch };
+        return null;
+    }
+
+    // 核心价格计算 (限制0.5~5)
+    function calculateNewPrice(productId, oldPrice, weather, saturation, consecutiveBonus, disasterMultiplier) {
+        let baseFluctuation = (Math.random() - 0.5) * 0.04;
+        let weatherCoeff = dailyWeatherEffect[weather][productId] || 0;
+        let satEffect = (50 - saturation) / 50 * 0.1 + (Math.random() - 0.5) * 0.02;
+        let consecutiveCoeff = consecutiveBonus ? (consecutiveBonus.effect[productId] || 0) : 0;
+        let totalChangePercent = baseFluctuation + weatherCoeff + satEffect + consecutiveCoeff;
+        totalChangePercent = Math.min(0.15, Math.max(-0.15, totalChangePercent));
+        let newPrice = oldPrice * (1 + totalChangePercent);
+        newPrice = newPrice * disasterMultiplier;
+        newPrice = Math.min(5.0, Math.max(0.5, newPrice));
+        return Math.round(newPrice * 100) / 100;
+    }
+
+    function updateSaturation(sat) {
+        let change = (Math.random() - 0.5) * 8;
+        let newSat = sat + change;
+        newSat = Math.min(100, Math.max(0, newSat));
+        return Math.round(newSat);
+    }
+
+    // 推进一天 (使用间隔触发灾害)
+    function advanceOneDay(state) {
+        let newState = JSON.parse(JSON.stringify(state));
+        const oldWeather = newState.currentWeather;
+        const rand = Math.random();
+        let newWeather = "晴天";
+        if (rand < 0.4) newWeather = "晴天";
+        else if (rand < 0.65) newWeather = "多云";
+        else if (rand < 0.85) newWeather = "雨天";
+        else newWeather = "暴晒";
+        newState.weatherHistory.push(oldWeather);
+        if (newState.weatherHistory.length > 3) newState.weatherHistory.shift();
+        newState.currentWeather = newWeather;
+        
+        // 灾害间隔逻辑（每3~5天一次）
+        let disasterMultiplier = 1.0;
+        let disasterName = "无";
+        if (newState.nextDisasterInterval === undefined || newState.nextDisasterInterval === 0) {
+            newState.nextDisasterInterval = Math.floor(Math.random() * 3) + 3;
+            newState.daysSinceLastDisaster = 0;
+        }
+        newState.daysSinceLastDisaster = (newState.daysSinceLastDisaster || 0) + 1;
+        if (newState.daysSinceLastDisaster >= newState.nextDisasterInterval) {
+            disasterMultiplier = 0.5;
+            disasterName = getRandomDisasterName();
+            newState.daysSinceLastDisaster = 0;
+            newState.nextDisasterInterval = Math.floor(Math.random() * 3) + 3;
+        }
+        newState.currentDisaster = disasterName;
+        
+        const consecutiveBonus = getConsecutiveBonus(newState.weatherHistory, newWeather);
+        for (let prod of PRODUCTS) {
+            const id = prod.id;
+            newState.saturations[id] = updateSaturation(newState.saturations[id]);
+            newState.prices[id] = calculateNewPrice(id, newState.prices[id], newWeather, newState.saturations[id], consecutiveBonus, disasterMultiplier);
+        }
+        let newDate = new Date(newState.currentDate);
+        newDate.setDate(newDate.getDate() + 1);
+        newState.currentDate = newDate.toISOString();
+        return newState;
+    }
+
+    // 根据真实时间同步
+    function syncWithRealTime(state) {
+        const lastDate = new Date(state.currentDate);
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        lastDate.setHours(0,0,0,0);
+        const diffDays = Math.floor((today - lastDate) / (1000*60*60*24));
+        if (diffDays <= 0) return state;
+        let newState = state;
+        for (let i = 0; i < diffDays; i++) {
+            newState = advanceOneDay(newState);
+        }
+        return newState;
+    }
+
+    function hashPassword(pwd) { return btoa(pwd + "farmSalt"); }
+
+    const STORAGE_KEY = "FarmGameUsersV7";
+    function loadUsers() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return JSON.parse(raw);
+        return {};
+    }
+    function saveUsers(users) { localStorage.setItem(STORAGE_KEY, JSON.stringify(users)); }
+
+    function createInitialState() {
+        const startDate = new Date(2025, 2, 25);
+        return {
+            cash: 100.00,
+            holdings: { apple: 0, fish: 0, wheat: 0 },
+            avgCost: { apple: 0, fish: 0, wheat: 0 },
+            prices: { apple: 2.50, fish: 3.20, wheat: 1.80 },
+            saturations: { apple: 50, fish: 50, wheat: 50 },
+            currentDate: startDate.toISOString(),
+            weatherHistory: [],
+            currentWeather: "晴天",
+            currentDisaster: "无",
+            transactionHistory: [],
+            withdrawHistory: [],
+            daysSinceLastDisaster: 0,
+            nextDisasterInterval: Math.floor(Math.random() * 3) + 3
+        };
+    }
+
+    function registerUser(username, password) {
+        const users = loadUsers();
+        if (users[username]) return { success: false, msg: "用户名已存在" };
+        users[username] = {
+            password: hashPassword(password),
+            gameState: createInitialState()
+        };
+        saveUsers(users);
+        return { success: true };
+    }
+
+    function loginUser(username, password) {
+        const users = loadUsers();
+        const user = users[username];
+        if (!user) return { success: false, msg: "用户不存在" };
+        if (user.password !== hashPassword(password)) return { success: false, msg: "密码错误" };
+        let updatedState = syncWithRealTime(user.gameState);
+        if (JSON.stringify(updatedState) !== JSON.stringify(user.gameState)) {
+            user.gameState = updatedState;
+            saveUsers(users);
+        }
+        return { success: true, gameState: user.gameState };
+    }
+
+    function saveGameState(username, gameState) {
+        const users = loadUsers();
+        if (users[username]) {
+            users[username].gameState = gameState;
+            saveUsers(users);
+        }
+    }
+
+    let currentUser = null;
+    let currentGameState = null;
+
+    // 买入逻辑
+    function buyProduct(productId, quantity) {
+        const price = currentGameState.prices[productId];
+        const totalCost = quantity * price;
+        if (totalCost > currentGameState.cash) { showError(`资金不足！需要 ${totalCost.toFixed(2)} 元`); return false; }
+        currentGameState.cash -= totalCost;
+        currentGameState.cash = Math.round(currentGameState.cash * 100) / 100;
+        const oldShares = currentGameState.holdings[productId];
+        const oldCost = currentGameState.avgCost[productId] * oldShares;
+        const newShares = oldShares + quantity;
+        const newAvgCost = (oldCost + totalCost) / newShares;
+        currentGameState.holdings[productId] = newShares;
+        currentGameState.avgCost[productId] = newAvgCost;
+        const productName = PRODUCTS.find(p=>p.id===productId).name;
+        currentGameState.transactionHistory.unshift({
+            date: formatDate(new Date(currentGameState.currentDate)),
+            action: "买入",
+            product: productName,
+            shares: quantity,
+            price: price.toFixed(2),
+            total: totalCost.toFixed(2)
+        });
+        if (currentGameState.transactionHistory.length > 100) currentGameState.transactionHistory.pop();
+        saveGameState(currentUser, currentGameState);
+        renderGameUI();
+        showError(`✅ 买入 ${quantity}股 ${productName}`, true);
+        return true;
+    }
+
+    // 卖出逻辑
+    function sellProduct(productId, quantity) {
+        if (quantity <= 0 || !Number.isInteger(quantity)) { showError("请输入正整数股数"); return false; }
+        if (quantity > currentGameState.holdings[productId]) { showError(`持股不足！只有 ${currentGameState.holdings[productId]} 股`); return false; }
+        const price = currentGameState.prices[productId];
+        const totalIncome = quantity * price;
+        currentGameState.cash += totalIncome;
+        currentGameState.cash = Math.round(currentGameState.cash * 100) / 100;
+        currentGameState.holdings[productId] -= quantity;
+        if (currentGameState.holdings[productId] === 0) currentGameState.avgCost[productId] = 0;
+        const productName = PRODUCTS.find(p=>p.id===productId).name;
+        currentGameState.transactionHistory.unshift({
+            date: formatDate(new Date(currentGameState.currentDate)),
+            action: "卖出",
+            product: productName,
+            shares: quantity,
+            price: price.toFixed(2),
+            total: totalIncome.toFixed(2)
+        });
+        if (currentGameState.transactionHistory.length > 100) currentGameState.transactionHistory.pop();
+        saveGameState(currentUser, currentGameState);
+        renderGameUI();
+        if (document.getElementById("assetModal").style.display === "flex") {
+            renderModalContent();
+        }
+        showError(`💰 卖出 ${quantity}股 ${productName}，收入 ${totalIncome.toFixed(2)}元`, true);
+        return true;
+    }
+
+    // 提现逻辑
+    function withdraw(amount) {
+        if (isNaN(amount) || amount <= 0) { showError("请输入大于0的提现金额"); return false; }
+        if (amount > currentGameState.cash) { showError(`现金不足！最多可提现 ${currentGameState.cash.toFixed(2)} 元`); return false; }
+        currentGameState.cash = Math.round((currentGameState.cash - amount) * 100) / 100;
+        const dateStr = formatDate(new Date(currentGameState.currentDate));
+        currentGameState.withdrawHistory.unshift({
+            date: dateStr,
+            amount: amount.toFixed(2),
+            remainingCash: currentGameState.cash.toFixed(2)
+        });
+        if (currentGameState.withdrawHistory.length > 50) currentGameState.withdrawHistory.pop();
+        saveGameState(currentUser, currentGameState);
+        renderGameUI();
+        if (document.getElementById("withdrawModal").style.display === "flex") {
+            renderWithdrawModal();
+        }
+        showError(`💸 提现 ${amount.toFixed(2)} 元成功！剩余现金 ${currentGameState.cash.toFixed(2)} 元`, true);
+        return true;
+    }
+
+    // 渲染主界面
+    function renderGameUI() {
+        if (!currentGameState) return;
+        const state = currentGameState;
+        const totalAsset = state.cash + Object.keys(state.holdings).reduce((sum, id) => sum + state.holdings[id] * state.prices[id], 0);
+        document.getElementById("cashDisplay").innerText = state.cash.toFixed(2);
+        document.getElementById("totalAssetDisplay").innerText = totalAsset.toFixed(2);
+        const dateObj = new Date(state.currentDate);
+        document.getElementById("dateLabel").innerText = formatDate(dateObj);
+        let weatherIcon = { "晴天":"☀️", "多云":"⛅", "雨天":"🌧️", "暴晒":"🔥" }[state.currentWeather] || "☀️";
+        document.getElementById("weatherIcon").innerHTML = weatherIcon;
+        document.getElementById("weatherName").innerText = state.currentWeather;
+        document.getElementById("specialEventText").innerText = state.currentDisaster || "无";
+        
+        const container = document.getElementById("productsContainer");
+        container.innerHTML = "";
+        for (let prod of PRODUCTS) {
+            const id = prod.id;
+            const price = state.prices[id];
+            const sat = state.saturations[id];
+            const card = document.createElement("div");
+            card.className = "product-card";
+            card.innerHTML = `
+                <div class="product-name ${prod.color}">${prod.name}</div>
+                <div class="price-area"><span class="current-price">${price.toFixed(2)}</span><span> 元/股</span></div>
+                <div class="saturation">📊 市场热度: ${sat}% ${sat>70?'🔻过热':(sat<30?'🔥需求旺':'⚖️平稳')}</div>
+                <div class="holdings">📦 持有: ${state.holdings[id]} 股  ${state.holdings[id]>0 ? `(成本 ${state.avgCost[id].toFixed(2)}元)` : ''}</div>
+                <div class="trade-controls">
+                    <input type="number" id="input-${id}" class="trade-input" placeholder="股数" value="1" step="1" min="1">
+                    <button class="btn-buy" data-product="${id}">✅ 买入</button>
+                </div>
+            `;
+            container.appendChild(card);
+        }
+        attachBuyEvents();
+    }
+
+    function attachBuyEvents() {
+        const container = document.getElementById("productsContainer");
+        container.onclick = (e) => {
+            const btn = e.target.closest(".btn-buy");
+            if (!btn) return;
+            const productId = btn.getAttribute("data-product");
+            const inputElem = document.getElementById(`input-${productId}`);
+            let quantity = parseInt(inputElem.value, 10);
+            if (isNaN(quantity) || quantity <= 0) { showError("请输入大于0的整数股数~"); return; }
+            buyProduct(productId, quantity);
+            renderGameUI();
+            inputElem.value = "1";
+        };
+    }
+
+    // 按日期分组交易记录
+    function groupTransactionsByDate(transactions) {
+        const groups = {};
+        for (let t of transactions) {
+            if (!groups[t.date]) groups[t.date] = [];
+            groups[t.date].push(t);
+        }
+        return groups;
+    }
+
+    // 渲染资产模态框内容
+    function renderModalContent() {
+        const state = currentGameState;
+        const container = document.getElementById("modalHoldingsContainer");
+        let html = "";
+        let totalProfit = 0;
+        for (let prod of PRODUCTS) {
+            const id = prod.id;
+            const shares = state.holdings[id];
+            if (shares === 0) {
+                html += `<div class="asset-detail-item" style="opacity:0.7;">✨ ${prod.name}：暂无持仓</div>`;
+                continue;
+            }
+            const avg = state.avgCost[id];
+            const current = state.prices[id];
+            const profitPerShare = current - avg;
+            const totalProfitVal = profitPerShare * shares;
+            totalProfit += totalProfitVal;
+            const profitClass = totalProfitVal >= 0 ? "profit-positive" : "profit-negative";
+            const totalCostValue = shares * avg;
+            const totalMarketValue = shares * current;
+            html += `
+                <div class="asset-detail-item">
+                    <div class="asset-detail-row"><strong>${prod.name}</strong> 持有 ${shares} 股</div>
+                    <div class="asset-detail-row">买入均价: ${avg.toFixed(2)} 元 &nbsp;|&nbsp; 现价: ${current.toFixed(2)} 元</div>
+                    <div class="asset-detail-row">持有总价值: ${totalCostValue.toFixed(2)} 元 &nbsp;|&nbsp; 现价总价值: ${totalMarketValue.toFixed(2)} 元</div>
+                    <div class="asset-detail-row ${profitClass}">📈 盈亏: ${totalProfitVal>=0?'+':''}${totalProfitVal.toFixed(2)} 元 (${((profitPerShare/avg)*100).toFixed(1)}%)</div>
+                    <div class="sell-control">
+                        <input type="number" id="sell-${id}" class="sell-input" placeholder="股数" value="1" step="1" min="1">
+                        <button class="btn-sell" data-product="${id}">🔻 卖出</button>
+                    </div>
+                </div>
+            `;
+        }
+        if (html === "") html = '<div class="asset-detail-item">✨ 暂无持仓，快去主界面买入吧~</div>';
+        html += `<div class="asset-detail-item" style="background:#f0e8ce;"><div class="asset-detail-row">💰 总浮动盈亏: <span class="${totalProfit>=0?'profit-positive':'profit-negative'}">${totalProfit>=0?'+':''}${totalProfit.toFixed(2)} 元</span></div></div>`;
+        container.innerHTML = html;
+        
+        // 交易记录
+        const historyDiv = document.getElementById("modalHistoryList");
+        const grouped = groupTransactionsByDate(state.transactionHistory);
+        const sortedDates = Object.keys(grouped).sort((a,b) => {
+            const dateA = new Date(a.replace(/月/g, '/').replace('日', ''));
+            const dateB = new Date(b.replace(/月/g, '/').replace('日', ''));
+            return dateB - dateA;
+        });
+        if (sortedDates.length === 0) {
+            historyDiv.innerHTML = `<div class="history-item">✨ 暂无交易</div>`;
+        } else {
+            let histHtml = "";
+            for (let date of sortedDates) {
+                const items = grouped[date];
+                histHtml += `<div class="history-group"><div class="history-date-header">📅 ${date}</div>`;
+                for (let rec of items) {
+                    histHtml += `
+                        <div class="history-item">
+                            <span>${rec.action === "买入"?"🟢":"🔴"} ${rec.action}</span>
+                            <span>${rec.product}</span>
+                            <span>📦 ${rec.shares}股</span>
+                            <span>💰 ${rec.price}元</span>
+                            <span>💵 ${rec.total}元</span>
+                        </div>
+                    `;
+                }
+                histHtml += `</div>`;
+            }
+            historyDiv.innerHTML = histHtml;
+        }
+        
+        // 绑定卖出事件
+        document.querySelectorAll(".btn-sell").forEach(btn => {
+            btn.onclick = (e) => {
+                const productId = btn.getAttribute("data-product");
+                const inputElem = document.getElementById(`sell-${productId}`);
+                let quantity = parseInt(inputElem.value, 10);
+                if (isNaN(quantity) || quantity <= 0) { showError("请输入有效卖出数量"); return; }
+                sellProduct(productId, quantity);
+                renderModalContent();
+                renderGameUI();
+                inputElem.value = "1";
+            };
+        });
+    }
+
+    // 渲染提现模态框
+    function renderWithdrawModal() {
+        if (!currentGameState) return;
+        document.getElementById("withdrawCashDisplay").innerText = currentGameState.cash.toFixed(2);
+        const historyContainer = document.getElementById("withdrawHistoryList");
+        if (currentGameState.withdrawHistory.length === 0) {
+            historyContainer.innerHTML = '<div class="withdraw-item">✨ 暂无提现记录</div>';
+        } else {
+            let html = "";
+            for (let rec of currentGameState.withdrawHistory) {
+                html += `
+                    <div class="withdraw-item">
+                        <span>📅 ${rec.date}</span>
+                        <span>💸 ${rec.amount} 元</span>
+                        <span>💰 剩余 ${rec.remainingCash} 元</span>
+                    </div>
+                `;
+            }
+            historyContainer.innerHTML = html;
+        }
+    }
+
+    function showError(msg, isSuccess = false) {
+        const errDiv = document.getElementById("errorMsg");
+        if (window.errorTimeout) clearTimeout(window.errorTimeout);
+        errDiv.style.background = isSuccess ? "#e2f7e0" : "#ffe0e0";
+        errDiv.style.color = isSuccess ? "#2c6e2c" : "#b33";
+        errDiv.innerText = msg;
+        window.errorTimeout = setTimeout(() => { if (errDiv) errDiv.innerText = ""; }, 2500);
+    }
+
+    function switchAccount() {
+        currentUser = null;
+        currentGameState = null;
+        document.getElementById("gamePanel").style.display = "none";
+        document.getElementById("authPanel").style.display = "block";
+        document.getElementById("username").value = "";
+        document.getElementById("password").value = "";
+        document.getElementById("authMsg").innerText = "";
+    }
+
+    // 模态框控制
+    function openAssetModal() {
+        renderModalContent();
+        document.getElementById("assetModal").style.display = "flex";
+    }
+    function closeAssetModal() {
+        document.getElementById("assetModal").style.display = "none";
+    }
+    function openWithdrawModal() {
+        renderWithdrawModal();
+        document.getElementById("withdrawModal").style.display = "flex";
+    }
+    function closeWithdrawModal() {
+        document.getElementById("withdrawModal").style.display = "none";
+    }
+
+    // 登录/注册
+    function initAuth() {
+        const loginTab = document.getElementById("loginTab");
+        const registerTab = document.getElementById("registerTab");
+        const authBtn = document.getElementById("authSubmitBtn");
+        const usernameInput = document.getElementById("username");
+        const passwordInput = document.getElementById("password");
+        const authMsg = document.getElementById("authMsg");
+        let mode = "login";
+        loginTab.onclick = () => { mode = "login"; loginTab.classList.add("active"); registerTab.classList.remove("active"); authBtn.innerText = "登录"; authMsg.innerText = ""; };
+        registerTab.onclick = () => { mode = "register"; registerTab.classList.add("active"); loginTab.classList.remove("active"); authBtn.innerText = "注册新账户"; authMsg.innerText = ""; };
+        authBtn.onclick = () => {
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+            if (!username || !password) { authMsg.innerText = "请输入用户名和密码"; return; }
+            if (mode === "register") {
+                const res = registerUser(username, password);
+                if (res.success) { authMsg.innerText = "注册成功！请登录"; mode = "login"; loginTab.click(); }
+                else authMsg.innerText = res.msg;
+            } else {
+                const res = loginUser(username, password);
+                if (res.success) {
+                    currentUser = username;
+                    currentGameState = res.gameState;
+                    document.getElementById("authPanel").style.display = "none";
+                    document.getElementById("gamePanel").style.display = "block";
+                    renderGameUI();
+                } else authMsg.innerText = res.msg;
+            }
+        };
+    }
+
+    function bindGameButtons() {
+        document.getElementById("myAssetBtn").onclick = openAssetModal;
+        document.getElementById("withdrawBtnHeader").onclick = openWithdrawModal;
+        document.getElementById("switchAccountBtn").onclick = switchAccount;
+        document.getElementById("closeAssetModalBtn").onclick = closeAssetModal;
+        document.getElementById("closeWithdrawModalBtn").onclick = closeWithdrawModal;
+        document.getElementById("confirmWithdrawBtn").onclick = () => {
+            const amountInput = document.getElementById("withdrawAmount");
+            let amount = parseFloat(amountInput.value);
+            if (isNaN(amount)) amount = 0;
+            withdraw(amount);
+            amountInput.value = "";
+            renderWithdrawModal();
+            renderGameUI();
+        };
+        window.onclick = (e) => {
+            if (e.target === document.getElementById("assetModal")) closeAssetModal();
+            if (e.target === document.getElementById("withdrawModal")) closeWithdrawModal();
+        };
+    }
+
+    initAuth();
+    bindGameButtons();
+    document.getElementById("gamePanel").style.display = "none";
+    document.getElementById("authPanel").style.display = "block";
+</script>
+</body>
+</html>
